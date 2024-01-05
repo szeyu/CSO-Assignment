@@ -21,35 +21,16 @@ MAIN:	MOV	A,#00H
 
 	MOV	DPTR,#TRAFFIC	; Data pointer for Traffic signal
 
-START:	MOV	A,#0FFH
-	MOV	P2,A		; Clear Yellow Light output
-
-	ACALL	UPDATE_TRAFFIC	; Green Light and Red Light Signal
-
-	ACALL	DELAY		; Delay for Green Light and Red Light
-
-	ACALL	UPDATE_R1	; Update traffic signal
-	ACALL	UPDATE_TRAFFIC	; Off the Green Light and be ready for Yellow Signal
-
-	ACALL	COUNTDOWN	; Count down and Yellow Signal
-
-	ACALL	UPDATE_R1	; Update traffic signal
+START:	MOV	A,R1		; Selector input for decoder
+	MOVC	A,@A+DPTR	; Decode to Traffic signal
+	MOV	P1,A		; Output Traffic signal
+	ACALL	UPDATE_R1	; Upadte R1 selector input for next state
 	AJMP	START
 
-UPDATE_TRAFFIC:	; Function to update and output Traffic signal
-		MOV	A,R1		; Selector input for decoder
-		MOVC	A,@A+DPTR	; Decode to Traffic signal
-		MOV	P1,A		; Green Light Signal
-		RET
 
 UPDATE_R1:	; Function to update R1
 		; Keep adding R1 by 1
 		; Change back to 000 state if become 1000
-		RET
-
-ROTATE_R2:	; Function to update R2
-		; Follow the sequence:
-		; 1000 => 0100 => 0010 => 0001 => 1000
 		RET
 
 DELAY:		; Function to delay for Green Light and Red Light
