@@ -45,9 +45,5 @@ The group is required to demonstrate the system during the presentation. The ses
 - For any inquiries, feel free to contact the contributors.
 
 ## Contributors
-- [Your Name]
-- [Team Member 1]
-- [Team Member 2]
-- [Team Member 3]
-
-**Note:** Ensure that all required files and documentation are included before the final submission. Good luck with your project!
+- Sim Sze Yu  23005023
+- Low Jia Xin 23
