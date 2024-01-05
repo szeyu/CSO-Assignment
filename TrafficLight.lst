@@ -30,92 +30,89 @@ TrafficLight                                                                    
                         29
                         30             ;ACALL  DELAY           ; Delay for Green Light and Red Light
                         31
-001B 74FF               32             MOV     A,#0FFH         ;clear RG,P1 output
+001B 74FF               32             MOV     A,#0FFH         ; Off Red and Green Light, and be ready for Yellow Signal
 001D F590               33             MOV     P1,A
                         34
 001F 1133               35             ACALL   ROTATE_R2       ; Call Yellow Light
                         36
-                        37             ;ACALL  COUNTDOWN
+                        37             ;ACALL  COUNTDOWN       ; Count down and Yellow Signal
                         38
-                        39             ; Off the Green Light and be ready for Yellow Signal
-0021 112C               40             ACALL   UPDATE_R1       ;ACALL  UPDATE_TRAFFIC
-                        41                                     ; Count down and Yellow Signal
+0021 112C               39             ACALL   UPDATE_R1       ; ACALL UPDATE_R1 for next Traffic
+                        40
+0023 0113               41             AJMP    START
                         42
-                        43                                     ; Update traffic signal
-0023 0113               44             AJMP    START
-                        45
-                        46     UPDATE_TRAFFIC: ; Function to update and output Traffic signal
-0025 E9                 47                     MOV     A,R1            ; Selector input for decoder
-0026 93                 48                     MOVC    A,@A+DPTR       ; Decode to Traffic signal
-0027 F590               49                     MOV     P1,A            ; Green Light Signal
-0029 112C               50                     ACALL   UPDATE_R1
-002B 22                 51                     RET
-                        52
-                        53     UPDATE_R1:      ; Function to update R1
-002C E9                 54                     MOV     A,R1
-002D 04                 55                     INC     A
-002E 20E30F             56                     JB      A.3,UPDATE_R1_END
-0031 F9                 57                     MOV     R1, A; Keep adding R1 by 1
-                        58                     ;Change back to 000 state if become 1000
-                        59                             ; Update the value of R1
-0032 22                 60                     RET
-                        61
-                        62
-                        63     ROTATE_R2:      ; Function to update R2
-                        64                     ; Follow the sequence: ROTATE RIGHT
-0033 EA                 65                     MOV     A,R2
-0034 F5A0               66                     MOV     P2,A
-0036 03                 67                     RR      A ; 0111 => 1011 => 1101 => 1110 => 0111
-0037 30A002             68                     JNB     P2.0,UPDATE_R2_END;
-003A FA                 69                     MOV     R2,A
-003B 22                 70                     RET
+                        43     UPDATE_TRAFFIC: ; Function to update and output Traffic signal
+0025 E9                 44                     MOV     A,R1            ; Selector input for decoder
+0026 93                 45                     MOVC    A,@A+DPTR       ; Decode to Traffic signal
+0027 F590               46                     MOV     P1,A            ; Green Light Signal
+0029 112C               47                     ACALL   UPDATE_R1
+002B 22                 48                     RET
+                        49
+                        50     UPDATE_R1:      ; Function to update R1
+002C E9                 51                     MOV     A,R1
+002D 04                 52                     INC     A                       ; Keep adding R1 by 1
+002E 20E30F             53                     JB      A.3,UPDATE_R1_END       ; Change back to 000 state if become 1000
+0031 F9                 54                     MOV     R1, A                   ; Update the value of R1
+0032 22                 55                     RET
+                        56
+                        57
+                        58     ROTATE_R2:      ; Function to update R2
+                        59                     ; Follow the sequence: ROTATE RIGHT of '1', to let the '0' move
+0033 EA                 60                     MOV     A,R2
+0034 F5A0               61                     MOV     P2,A
+0036 03                 62                     RR      A ; 0111 => 1011 => 1101 => 1110 => 0111
+0037 30A002             63                     JNB     P2.0,UPDATE_R2_END;
+003A FA                 64                     MOV     R2,A
+003B 22                 65                     RET
+                        66
+                        67                     ; Function to wrap around yellow light
+003C 74F7               68     UPDATE_R2_END:  MOV     A,#0F7H ; Wrap around 0111 => 1110
+003E FA                 69                     MOV     R2, A   ; Update the value of R2
+003F 22                 70                     RET
                         71
-003C 74F7               72     UPDATE_R2_END:  MOV     A,#0F7H
-003E FA                 73                     MOV     R2, A; Update the value of R1
-003F 22                 74                     RET
-                        75
-0040 7400               76     UPDATE_R1_END:  MOV     A,#00H
-0042 F9                 77                     MOV     R1, A; Update the value of R1
-0043 22                 78                     RET
-                        79
-                        80                     ; Function to delay for Green Light and Red Light
-0044 78FF               81     DELAY:          MOV     R0,#0FFh
-0046 79F0               82     DELAY1:         MOV     R1,#0F0h
-0048 D9FE               83     DELAY2:         DJNZ    R1,DELAY2 ;Decrement register1 and jump to delay2 if it is not 0
-004A D8FA               84                     DJNZ    R0,DELAY1 ;Decrement register0 and jump to delay1 if it is not 0
-004C 22                 85                     RET
-                        86
-                        87                     ; Function to countdown for Yellow Light (Act as Delay)
-004D 7BFF               88     COUNTDOWN:      MOV     R3,#0FFh
-004F 7CF0               89     COUNTDOWN1:     MOV     R4,#0F0h
-0051 DCFE               90     COUNTDOWN2:     DJNZ    R4,COUNTDOWN2
-0053 DBFA               91                     DJNZ    R3,COUNTDOWN1
-0055 22                 92                     RET
-                        93
-                        94             ; Decoder to Green Light and Red Light Display for 4 Traffic
-                        95             ; G1R1 G2R2 G3R3 G4R4
-                        96             ; 0 means output
-                        97             ; 1 means no output
-                        98
-                        99             ; Traffic 1
-                       100             ; 01 10 10 10 => 6AH    G1 is turned on while other R keep turned on
-                       101             ; 00 10 10 10 => 2AH    G1 is turned off for Y while other R keep turned on
-                       102
-                       103             ; Traffic 2
-                       104             ; 10 01 10 10 => 9AH    G2 is turned on while other R keep turned on
-                       105             ; 10 00 10 10 => 8AH    G2 is turned off for Y while other R keep turned on
-                       106
-                       107             ; Traffic 3
-                       108             ; 10 10 01 10 => A6H    G3 is turned on while other R keep turned on
-                       109             ; 10 10 00 10 => A2H    G3 is turned off for Y while other R keep turned on
-                       110
-                       111             ; Traffic 4
-                       112             ; 10 10 10 01 => A9H    G4 is turned on while other R keep turned on
-                       113             ; 10 10 10 00 => A8H    G4 is turned off for Y while other R keep turned on
-                       114
-0056 6A2A9A8AA6        115     TRAFFIC:        DB      6AH,2AH,9AH,8AH,0A6H,0A2H,0A9H,0A8H
+                        72                     ; Function to wrap around R&G light
+0040 7400               73     UPDATE_R1_END:  MOV     A,#00H  ; Wrap around 0-7 of A
+0042 F9                 74                     MOV     R1, A   ; Update the value of R1
+0043 22                 75                     RET
+                        76
+                        77                     ; Function to delay for Green Light and Red Light
+0044 78FF               78     DELAY:          MOV     R0,#0FFh
+0046 79F0               79     DELAY1:         MOV     R1,#0F0h
+0048 D9FE               80     DELAY2:         DJNZ    R1,DELAY2 ;Decrement register1 and jump to delay2 if it is not 0
+004A D8FA               81                     DJNZ    R0,DELAY1 ;Decrement register0 and jump to delay1 if it is not 0
+004C 22                 82                     RET
+                        83
+                        84                     ; Function to countdown for Yellow Light (Act as Delay)
+004D 7BFF               85     COUNTDOWN:      MOV     R3,#0FFh
+004F 7CF0               86     COUNTDOWN1:     MOV     R4,#0F0h
+0051 DCFE               87     COUNTDOWN2:     DJNZ    R4,COUNTDOWN2
+0053 DBFA               88                     DJNZ    R3,COUNTDOWN1
+0055 22                 89                     RET
+                        90
+                        91             ; Decoder to Green Light and Red Light Display for 4 Traffic
+                        92             ; G1R1 G2R2 G3R3 G4R4
+                        93             ; 0 means output
+                        94             ; 1 means no output
+                        95
+                        96             ; Traffic 1
+                        97             ; 01 10 10 10 => 6AH    G1 is turned on while other R keep turned on
+                        98             ; 00 10 10 10 => 2AH    G1 is turned off for Y while other R keep turned on
+                        99
+                       100             ; Traffic 2
+                       101             ; 10 01 10 10 => 9AH    G2 is turned on while other R keep turned on
+                       102             ; 10 00 10 10 => 8AH    G2 is turned off for Y while other R keep turned on
+                       103
+                       104             ; Traffic 3
+                       105             ; 10 10 01 10 => A6H    G3 is turned on while other R keep turned on
+                       106             ; 10 10 00 10 => A2H    G3 is turned off for Y while other R keep turned on
+                       107
+                       108             ; Traffic 4
+                       109             ; 10 10 10 01 => A9H    G4 is turned on while other R keep turned on
+                       110             ; 10 10 10 00 => A8H    G4 is turned off for Y while other R keep turned on
+                       111
+0056 6A2A9A8AA6        112     TRAFFIC:        DB      6AH,2AH,9AH,8AH,0A6H,0A2H,0A9H,0A8H
      A2A9A8
-                       116                     END
+                       113                     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 
