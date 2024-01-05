@@ -7,12 +7,12 @@ MAIN:	MOV	A,#00H
 	MOV	A,#00H
 	MOV	P2,A	; Set Port 2 as output for Yellow Light
 
-	MOV	A,#00H
+	MOV	A,#00H	; RED,GREEN
 	MOV	R1,A	; Set R1 initial state to 000 state
 			; There will be 8 state in R1 from 000 to 111
 			; Will be decoded to TRAFFIC signal
 
-	MOV	A,#08H
+	MOV	A,#0F7H	; YELLOW
 	MOV	R2,A	; Set R2 initial state to 1000 state
 			; There will be 4 state in R2
 			; Sequence:
@@ -21,22 +21,71 @@ MAIN:	MOV	A,#00H
 
 	MOV	DPTR,#TRAFFIC	; Data pointer for Traffic signal
 
-START:	MOV	A,R1		; Selector input for decoder
-	MOVC	A,@A+DPTR	; Decode to Traffic signal
-	MOV	P1,A		; Output Traffic signal
-	ACALL	UPDATE_R1	; Upadte R1 selector input for next state
+START:	MOV	B,#0FFH
+	MOV	P2,B		; Clear Yellow Light output
+
+	
+	ACALL	UPDATE_TRAFFIC	; Green Light and Red Light Signal
+
+	;ACALL	DELAY		; Delay for Green Light and Red Light
+
+	MOV	A,#0FFH		; Off Red and Green Light, and be ready for Yellow Signal
+	MOV	P1,A		
+
+	ACALL	ROTATE_R2	; Call Yellow Light
+
+	;ACALL	COUNTDOWN	; Count down and Yellow Signal
+	
+	ACALL	UPDATE_R1	; ACALL	UPDATE_R1 for next Traffic
+				
 	AJMP	START
 
+UPDATE_TRAFFIC:	; Function to update and output Traffic signal
+		MOV	A,R1		; Selector input for decoder
+		MOVC	A,@A+DPTR	; Decode to Traffic signal
+		MOV	P1,A		; Green Light Signal
+		ACALL	UPDATE_R1
+		RET
 
 UPDATE_R1:	; Function to update R1
-		; Keep adding R1 by 1
-		; Change back to 000 state if become 1000
+		MOV	A,R1
+		INC	A			; Keep adding R1 by 1
+		JB	A.3,UPDATE_R1_END	; Change back to 000 state if become 1000
+		MOV	R1, A			; Update the value of R1
 		RET
 
-DELAY:		; Function to delay for Green Light and Red Light
+
+ROTATE_R2:	; Function to update R2
+		; Follow the sequence: ROTATE RIGHT of '1', to let the '0' move
+		MOV	A,R2
+		MOV	P2,A
+		RR	A ; 0111 => 1011 => 1101 => 1110 => 0111
+		JNB	P2.0,UPDATE_R2_END;
+		MOV	R2,A
 		RET
 
-COUNTDOWN:	; Function to countdown for Yellow Light (Act as Delay)
+		; Function to wrap around yellow light
+UPDATE_R2_END:	MOV	A,#0F7H	; Wrap around 0111 => 1110
+		MOV	R2, A	; Update the value of R2
+		RET
+
+		; Function to wrap around R&G light
+UPDATE_R1_END:	MOV	A,#00H	; Wrap around 0-7 of A
+		MOV	R1, A	; Update the value of R1
+		RET
+
+		; Function to delay for Green Light and Red Light
+DELAY:		MOV 	R0,#0FFh
+DELAY1: 	MOV 	R1,#0F0h
+DELAY2: 	DJNZ 	R1,DELAY2 ;Decrement register1 and jump to delay2 if it is not 0
+		DJNZ    R0,DELAY1 ;Decrement register0 and jump to delay1 if it is not 0	
+		RET
+
+		; Function to countdown for Yellow Light (Act as Delay)
+COUNTDOWN:	MOV	R3,#0FFh
+COUNTDOWN1:	MOV	R4,#0F0h
+COUNTDOWN2:	DJNZ	R4,COUNTDOWN2
+		DJNZ	R3,COUNTDOWN1
 		RET
 
 	; Decoder to Green Light and Red Light Display for 4 Traffic
