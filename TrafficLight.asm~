@@ -93,19 +93,19 @@ COUNTDOWN2:	DJNZ	R4,COUNTDOWN2
 	
 	; Traffic 1
 	; 01 10 10 10 => 6AH	G1 is turned on while other R keep turned on
-	; 11 10 10 10 => 0EAH	G1 is turned off for Y while other R keep turned on
+	; 11 10 10 10 => EAH	G1 is turned off for Y while other R keep turned on
 
 	; Traffic 2
 	; 10 01 10 10 => 9AH	G2 is turned on while other R keep turned on
-	; 10 11 10 10 => 0BAH	G2 is turned off for Y while other R keep turned on
+	; 10 11 10 10 => BAH	G2 is turned off for Y while other R keep turned on
 
 	; Traffic 3
-	; 10 10 01 10 => 0A6H	G3 is turned on while other R keep turned on
-	; 10 10 11 10 => 0AEH	G3 is turned off for Y while other R keep turned on
+	; 10 10 01 10 => A6H	G3 is turned on while other R keep turned on
+	; 10 10 11 10 => AEH	G3 is turned off for Y while other R keep turned on
 
 	; Traffic 4
-	; 10 10 10 01 => 0A9H	G4 is turned on while other R keep turned on
-	; 10 10 10 11 => 0ABH	G4 is turned off for Y while other R keep turned on
+	; 10 10 10 01 => A9H	G4 is turned on while other R keep turned on
+	; 10 10 10 11 => ABH	G4 is turned off for Y while other R keep turned on
 
-TRAFFIC:	DB	6AH,0EAH,9AH,0BAH,0A6H,0AEH,0A9H,0ABH
+TRAFFIC:	DB	6AH,2AH,9AH,8AH,0A6H,0A2H,0A9H,0A8H
 		END

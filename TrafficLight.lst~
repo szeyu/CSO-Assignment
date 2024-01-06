@@ -94,22 +94,22 @@ TrafficLight                                                                    
                         93
                         94             ; Traffic 1
                         95             ; 01 10 10 10 => 6AH    G1 is turned on while other R keep turned on
-                        96             ; 11 10 10 10 => 0EAH   G1 is turned off for Y while other R keep turned on
+                        96             ; 11 10 10 10 => EAH    G1 is turned off for Y while other R keep turned on
                         97
                         98             ; Traffic 2
                         99             ; 10 01 10 10 => 9AH    G2 is turned on while other R keep turned on
-                       100             ; 10 11 10 10 => 0BAH   G2 is turned off for Y while other R keep turned on
+                       100             ; 10 11 10 10 => BAH    G2 is turned off for Y while other R keep turned on
                        101
                        102             ; Traffic 3
-                       103             ; 10 10 01 10 => 0A6H   G3 is turned on while other R keep turned on
-                       104             ; 10 10 11 10 => 0AEH   G3 is turned off for Y while other R keep turned on
+                       103             ; 10 10 01 10 => A6H    G3 is turned on while other R keep turned on
+                       104             ; 10 10 11 10 => AEH    G3 is turned off for Y while other R keep turned on
                        105
                        106             ; Traffic 4
-                       107             ; 10 10 10 01 => 0A9H   G4 is turned on while other R keep turned on
-                       108             ; 10 10 10 11 => 0ABH   G4 is turned off for Y while other R keep turned on
+                       107             ; 10 10 10 01 => A9H    G4 is turned on while other R keep turned on
+                       108             ; 10 10 10 11 => ABH    G4 is turned off for Y while other R keep turned on
                        109
-0054 6AEA9ABAA6        110     TRAFFIC:        DB      6AH,0EAH,9AH,0BAH,0A6H,0AEH,0A9H,0ABH
-     AEA9AB
+0054 6A2A9A8AA6        110     TRAFFIC:        DB      6AH,2AH,9AH,8AH,0A6H,0A2H,0A9H,0A8H
+     A2A9A8
                        111                     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
