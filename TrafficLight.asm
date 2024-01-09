@@ -90,7 +90,7 @@ COUNTDOWN2:	DJNZ	R4,COUNTDOWN2
 	; G1R1 G2R2 G3R3 G4R4
 	; 0 means output
 	; 1 means no output
-	
+
 	; Traffic 1
 	; 01 10 10 10 => 6AH	G1 is turned on while other R keep turned on
 	; 11 10 10 10 => 0EAH	G1 is turned off for Y while other R keep turned on
