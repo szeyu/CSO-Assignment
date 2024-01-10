@@ -4,113 +4,129 @@ TrafficLight                                                                    
                          3
 0002 7400                4     MAIN:   MOV     A,#00H
 0004 F590                5             MOV     P1,A    ; Set Port 1 as output for Green Light and Red Light
-                         6
-0006 7400                7             MOV     A,#00H
-0008 F5A0                8             MOV     P2,A    ; Set Port 2 as output for Yellow Light
-                         9
-000A 7400               10             MOV     A,#00H  ; RED,GREEN
-000C F9                 11             MOV     R1,A    ; Set R1 initial state to 000 state
-                        12                             ; There will be 8 state in R1 from 000 to 111
-                        13                             ; Will be decoded to TRAFFIC signal
-                        14
-000D 74F7               15             MOV     A,#0F7H ; YELLOW
-000F FA                 16             MOV     R2,A    ; Set R2 initial state to 0111 state
-                        17                             ; There will be 4 state in R2
-                        18                             ; Sequence:
-                        19                             ; 0111 => 1011 => 1101 => 1110 => 0111
-                        20                             ; Will be updated using Rotator function
-                        21
-0010 900054             22             MOV     DPTR,#TRAFFIC   ; Data pointer for Traffic signal
+0006 F5A0                6             MOV     P2,A    ; Set Port 2 as output for Yellow Light
+0008 F5B0                7             MOV     P3,A    ; Set Port 3 as output for 7 segment display
+                         8
+000A 7400                9             MOV     A,#00H  ; RED,GREEN
+000C F9                 10             MOV     R1,A    ; Set R1 initial state to 000 state
+                        11                             ; There will be 8 state in R1 from 000 to 111
+                        12                             ; Will be decoded to TRAFFIC signal
+                        13
+000D 74F7               14             MOV     A,#0F7H ; YELLOW
+000F FA                 15             MOV     R2,A    ; Set R2 initial state to 0111 state
+                        16                             ; There will be 4 state in R2
+                        17                             ; Sequence:
+                        18                             ; 0111 => 1011 => 1101 => 1110 => 0111
+                        19                             ; Will be updated using Rotator function
+                        20
+0010 7408               21             MOV     A,#8    ; Set R5 initially point to 8th location of DPTR since there is only 1 DPTR a
+0012 FD                 22             MOV     R5,A
                         23
-0013 75F0FF             24     START:  MOV     B,#0FFH
-0016 85F0A0             25             MOV     P2,B            ; Clear Yellow Light output
+0013 900065             24             MOV     DPTR,#TRAFFIC_AND_SEG   ; Data pointer for Traffic signal and 7 Segment Display toget
+                        25
                         26
-0019 1125               27             ACALL   UPDATE_TRAFFIC  ; Green Light and Red Light Signal
-                        28
-                        29             ;ACALL  DELAY           ; Delay for Green Light and Red Light
-                        30
-001B 112A               31             ACALL   UPDATE_R1       ; ACALL UPDATE_R1 for next Traffic
-001D 1125               32             ACALL   UPDATE_TRAFFIC  ; Off Green Light, and be ready for Yellow Signal
-                        33
-001F 1131               34             ACALL   ROTATE_R2       ; Call Yellow Light
+0016 75F0FF             27     START:  MOV     B,#0FFH
+0019 85F0A0             28             MOV     P2,B            ; Clear Yellow Light output
+                        29
+001C 112E               30             ACALL   UPDATE_TRAFFIC  ; Green Light and Red Light Signal
+                        31             ;ACALL  DELAY           ; Delay for Green Light and Red Light
+001E 1154               32             ACALL   COUNTDOWN5      ; Countdown from 5
+0020 7400               33             MOV     A,#00H
+0022 F5B0               34             MOV     P3,A    ; off 7 segment display
                         35
-                        36             ;ACALL  COUNTDOWN       ; Count down and Yellow Signal
-                        37
-0021 112A               38             ACALL   UPDATE_R1       ; ACALL UPDATE_R1 for next Traffic
-                        39
-0023 0113               40             AJMP    START
-                        41
-                        42     UPDATE_TRAFFIC: ; Function to update and output Traffic signal
-0025 E9                 43                     MOV     A,R1            ; Selector input for decoder
-0026 93                 44                     MOVC    A,@A+DPTR       ; Decode to Traffic signal
-0027 F590               45                     MOV     P1,A            ; Green Light Signal
-0029 22                 46                     RET
-                        47
-                        48     UPDATE_R1:      ; Function to update R1
-002A E9                 49                     MOV     A,R1
-002B 04                 50                     INC     A                       ; Keep adding R1 by 1
-002C 20E30F             51                     JB      A.3,UPDATE_R1_END       ; Change back to 000 state if become 1000
-002F F9                 52                     MOV     R1, A                   ; Update the value of R1
-0030 22                 53                     RET
-                        54
-                        55
-                        56     ROTATE_R2:      ; Function to update R2
-                        57                     ; Follow the sequence: ROTATE RIGHT of '1', to let the '0' move
-0031 EA                 58                     MOV     A,R2
-0032 F5A0               59                     MOV     P2,A
-0034 03                 60                     RR      A ; 0111 => 1011 => 1101 => 1110 => 0111
-0035 30A002             61                     JNB     P2.0,UPDATE_R2_END;
-0038 FA                 62                     MOV     R2,A
-0039 22                 63                     RET
-                        64
-                        65                     ; Function to wrap around yellow light
-003A 74F7               66     UPDATE_R2_END:  MOV     A,#0F7H ; Wrap around 0111 => 1110
-003C FA                 67                     MOV     R2, A   ; Update the value of R2
-003D 22                 68                     RET
+0024 1133               36             ACALL   UPDATE_R1       ; ACALL UPDATE_R1 for next Traffic
+0026 112E               37             ACALL   UPDATE_TRAFFIC  ; Off Green Light, and be ready for Yellow Signal
+                        38
+0028 113A               39             ACALL   ROTATE_R2       ; Call Yellow Light
+                        40
+002A 1133               41             ACALL   UPDATE_R1       ; ACALL UPDATE_R1 for next Traffic
+                        42
+002C 0116               43             AJMP    START
+                        44
+                        45
+                        46     UPDATE_TRAFFIC: ; Function to update and output Traffic signal
+002E E9                 47                     MOV     A,R1            ; Selector input for decoder
+002F 93                 48                     MOVC    A,@A+DPTR       ; Decode to Traffic signal
+0030 F590               49                     MOV     P1,A            ; Traffic Light Signal
+0032 22                 50                     RET
+                        51
+                        52     UPDATE_R1:      ; Function to update R1
+0033 E9                 53                     MOV     A,R1
+0034 04                 54                     INC     A                       ; Keep adding R1 by 1
+0035 20E30F             55                     JB      A.3,UPDATE_R1_END       ; Change back to 000 state if become 1000
+0038 F9                 56                     MOV     R1, A                   ; Update the value of R1
+0039 22                 57                     RET
+                        58
+                        59
+                        60     ROTATE_R2:      ; Function to update R2
+                        61                     ; Follow the sequence: ROTATE RIGHT of '1', to let the '0' move
+003A EA                 62                     MOV     A,R2
+003B F5A0               63                     MOV     P2,A
+003D 03                 64                     RR      A ; 0111 => 1011 => 1101 => 1110 => 0111
+003E 30A002             65                     JNB     P2.0,UPDATE_R2_END;
+0041 FA                 66                     MOV     R2,A
+                        67                     ;ACALL  DELAY
+0042 22                 68                     RET
                         69
-                        70                     ; Function to wrap around R&G light
-003E 7400               71     UPDATE_R1_END:  MOV     A,#00H  ; Wrap around 0-7 of A
-0040 F9                 72                     MOV     R1, A   ; Update the value of R1
-0041 22                 73                     RET
+                        70                     ; Function to wrap around yellow light
+0043 74F7               71     UPDATE_R2_END:  MOV     A,#0F7H ; Wrap around 0111 => 1110
+0045 FA                 72                     MOV     R2, A   ; Update the value of R2
+0046 22                 73                     RET
                         74
-                        75                     ; Function to delay for Green Light and Red Light
-0042 78FF               76     DELAY:          MOV     R0,#0FFh
-0044 79F0               77     DELAY1:         MOV     R1,#0F0h
-0046 D9FE               78     DELAY2:         DJNZ    R1,DELAY2 ;Decrement register1 and jump to delay2 if it is not 0
-0048 D8FA               79                     DJNZ    R0,DELAY1 ;Decrement register0 and jump to delay1 if it is not 0
-004A 22                 80                     RET
-                        81
-                        82                     ; Function to countdown for Yellow Light (Act as Delay)
-004B 7BFF               83     COUNTDOWN:      MOV     R3,#0FFh
-004D 7CF0               84     COUNTDOWN1:     MOV     R4,#0F0h
-004F DCFE               85     COUNTDOWN2:     DJNZ    R4,COUNTDOWN2
-0051 DBFA               86                     DJNZ    R3,COUNTDOWN1
-0053 22                 87                     RET
-                        88
-                        89             ; Decoder to Green Light and Red Light Display for 4 Traffic
-                        90             ; G1R1 G2R2 G3R3 G4R4
-                        91             ; 0 means output
-                        92             ; 1 means no output
+                        75                     ; Function to wrap around R&G light
+0047 7400               76     UPDATE_R1_END:  MOV     A,#00H  ; Wrap around 0-7 of A
+0049 F9                 77                     MOV     R1, A   ; Update the value of R1
+004A 22                 78                     RET
+                        79
+                        80                     ; Function to delay for 1 seconds
+004B 78FF               81     DELAY:          MOV     R0,#0FFh
+004D 79F0               82     DELAY1:         MOV     R1,#0F0h
+004F D9FE               83     DELAY2:         DJNZ    R1,DELAY2 ;Decrement register1 and jump to delay2 if it is not 0
+0051 D8FA               84                     DJNZ    R0,DELAY1 ;Decrement register0 and jump to delay1 if it is not 0
+0053 22                 85                     RET
+                        86
+0054 740E               87     COUNTDOWN5:     MOV     A,#14           ; Set initial R5 point to digit 5
+0056 FD                 88                     MOV     R5,A
+0057 115F               89                     ACALL   TIMER           ; Count down
+0059 115F               90                     ACALL   TIMER           ; Count down
+005B 115F               91                     ACALL   TIMER           ; Count down
+005D 115F               92                     ACALL   TIMER           ; Count down
                         93
-                        94             ; Traffic 1
-                        95             ; 01 10 10 10 => 6AH    G1 is turned on while other R keep turned on
-                        96             ; 11 10 10 10 => 0EAH   G1 is turned off for Y while other R keep turned on
-                        97
-                        98             ; Traffic 2
-                        99             ; 10 01 10 10 => 9AH    G2 is turned on while other R keep turned on
-                       100             ; 10 11 10 10 => 0BAH   G2 is turned off for Y while other R keep turned on
+005F 1D                 94     TIMER:  DEC     R5
+0060 ED                 95             MOV     A,R5            ;read input value of R5
+                        96             ;ACALL  DELAY
+0061 93                 97             MOVC    A,@A+DPTR       ;load value from table
+0062 F5B0               98             MOV     P3,A            ;output value
+0064 22                 99             RET
+                       100
                        101
-                       102             ; Traffic 3
-                       103             ; 10 10 01 10 => 0A6H   G3 is turned on while other R keep turned on
-                       104             ; 10 10 11 10 => 0AEH   G3 is turned off for Y while other R keep turned on
-                       105
-                       106             ; Traffic 4
-                       107             ; 10 10 10 01 => 0A9H   G4 is turned on while other R keep turned on
-                       108             ; 10 10 10 11 => 0ABH   G4 is turned off for Y while other R keep turned on
-                       109
-0054 6AEA9ABAA6        110     TRAFFIC:        DB      6AH,0EAH,9AH,0BAH,0A6H,0AEH,0A9H,0ABH
-     AEA9AB
-                       111                     END
+                       102             ; Decoder to Green Light and Red Light Display for 4 Traffic
+                       103             ; G1R1 G2R2 G3R3 G4R4
+                       104             ; 0 means output
+                       105             ; 1 means no output
+                       106
+                       107             ; Traffic 1
+                       108             ; 01 10 10 10 => 6AH    G1 is turned on while other R keep turned on
+                       109             ; 11 10 10 10 => 0EAH   G1 is turned off for Y while other R keep turned on
+                       110
+                       111             ; Traffic 2
+                       112             ; 10 01 10 10 => 9AH    G2 is turned on while other R keep turned on
+                       113             ; 10 11 10 10 => 0BAH   G2 is turned off for Y while other R keep turned on
+                       114
+                       115             ; Traffic 3
+                       116             ; 10 10 01 10 => 0A6H   G3 is turned on while other R keep turned on
+                       117             ; 10 10 11 10 => 0AEH   G3 is turned off for Y while other R keep turned on
+                       118
+                       119             ; Traffic 4
+                       120             ; 10 10 10 01 => 0A9H   G4 is turned on while other R keep turned on
+                       121             ; 10 10 10 11 => 0ABH   G4 is turned off for Y while other R keep turned on
+                       122
+                       123     ;lookup table for 7-segment display pattern
+0065 6AEA9ABAA6        124     TRAFFIC_AND_SEG:        DB      6AH,0EAH,9AH,0BAH,0A6H,0AEH,0A9H,0ABH,     3Fh,06h,5Bh,4Fh,66h,6Dh,7D
+     AEA9AB3F06
+     5B4F666D7D
+     077F6F
+                       125                     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 
@@ -164,16 +180,14 @@ CKSEL. . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
 CL . . . . . . . . . . . . . . . . .  D  ADDR  00E9H  NOT USED
 CLKREG . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CMOD . . . . . . . . . . . . . . . .  D  ADDR  00D9H  NOT USED
-COUNTDOWN. . . . . . . . . . . . . .  C  ADDR  004BH  NOT USED
-COUNTDOWN1 . . . . . . . . . . . . .  C  ADDR  004DH
-COUNTDOWN2 . . . . . . . . . . . . .  C  ADDR  004FH
+COUNTDOWN5 . . . . . . . . . . . . .  C  ADDR  0054H
 CPRL2. . . . . . . . . . . . . . . .  B  ADDR  00C8H  NOT USED
 CR . . . . . . . . . . . . . . . . .  B  ADDR  00DEH  NOT USED
 CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
 CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H  NOT USED
-DELAY. . . . . . . . . . . . . . . .  C  ADDR  0042H  NOT USED
-DELAY1 . . . . . . . . . . . . . . .  C  ADDR  0044H
-DELAY2 . . . . . . . . . . . . . . .  C  ADDR  0046H
+DELAY. . . . . . . . . . . . . . . .  C  ADDR  004BH  NOT USED
+DELAY1 . . . . . . . . . . . . . . .  C  ADDR  004DH
+DELAY2 . . . . . . . . . . . . . . .  C  ADDR  004FH
 DP0H . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
 DP0L . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 DP1H . . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
@@ -220,7 +234,7 @@ P1 . . . . . . . . . . . . . . . . .  D  ADDR  0090H
 P1M1 . . . . . . . . . . . . . . . .  D  ADDR  00D4H  NOT USED
 P1M2 . . . . . . . . . . . . . . . .  D  ADDR  00E2H  NOT USED
 P2 . . . . . . . . . . . . . . . . .  D  ADDR  00A0H
-P3 . . . . . . . . . . . . . . . . .  D  ADDR  00B0H  NOT USED
+P3 . . . . . . . . . . . . . . . . .  D  ADDR  00B0H
 P3M1 . . . . . . . . . . . . . . . .  D  ADDR  00D5H  NOT USED
 P3M2 . . . . . . . . . . . . . . . .  D  ADDR  00E3H  NOT USED
 P4 . . . . . . . . . . . . . . . . .  D  ADDR  00C0H  NOT USED
@@ -251,7 +265,7 @@ RD . . . . . . . . . . . . . . . . .  B  ADDR  00B7H  NOT USED
 REN. . . . . . . . . . . . . . . . .  B  ADDR  009CH  NOT USED
 RESET. . . . . . . . . . . . . . . .  C  ADDR  0000H  NOT USED
 RI . . . . . . . . . . . . . . . . .  B  ADDR  0098H  NOT USED
-ROTATE_R2. . . . . . . . . . . . . .  C  ADDR  0031H
+ROTATE_R2. . . . . . . . . . . . . .  C  ADDR  003AH
 RS0. . . . . . . . . . . . . . . . .  B  ADDR  00D3H  NOT USED
 RS1. . . . . . . . . . . . . . . . .  B  ADDR  00D4H  NOT USED
 RXD. . . . . . . . . . . . . . . . .  B  ADDR  00B0H  NOT USED
@@ -274,7 +288,7 @@ SPDAT. . . . . . . . . . . . . . . .  D  ADDR  00C5H  NOT USED
 SPDR . . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 SPSR . . . . . . . . . . . . . . . .  D  ADDR  00AAH  NOT USED
 SPSTA. . . . . . . . . . . . . . . .  D  ADDR  00C4H  NOT USED
-START. . . . . . . . . . . . . . . .  C  ADDR  0013H
+START. . . . . . . . . . . . . . . .  C  ADDR  0016H
 T0 . . . . . . . . . . . . . . . . .  B  ADDR  00B4H  NOT USED
 T1 . . . . . . . . . . . . . . . . .  B  ADDR  00B5H  NOT USED
 T2CON. . . . . . . . . . . . . . . .  D  ADDR  00C8H  NOT USED
@@ -289,6 +303,7 @@ TH0. . . . . . . . . . . . . . . . .  D  ADDR  008CH  NOT USED
 TH1. . . . . . . . . . . . . . . . .  D  ADDR  008DH  NOT USED
 TH2. . . . . . . . . . . . . . . . .  D  ADDR  00CDH  NOT USED
 TI . . . . . . . . . . . . . . . . .  B  ADDR  0099H  NOT USED
+TIMER. . . . . . . . . . . . . . . .  C  ADDR  005FH
 TIMER0 . . . . . . . . . . . . . . .  C  ADDR  000BH  NOT USED
 TIMER1 . . . . . . . . . . . . . . .  C  ADDR  001BH  NOT USED
 TIMER2 . . . . . . . . . . . . . . .  C  ADDR  002BH  NOT USED
@@ -299,12 +314,12 @@ TMOD . . . . . . . . . . . . . . . .  D  ADDR  0089H  NOT USED
 TR0. . . . . . . . . . . . . . . . .  B  ADDR  008CH  NOT USED
 TR1. . . . . . . . . . . . . . . . .  B  ADDR  008EH  NOT USED
 TR2. . . . . . . . . . . . . . . . .  B  ADDR  00CAH  NOT USED
-TRAFFIC. . . . . . . . . . . . . . .  C  ADDR  0054H
+TRAFFIC_AND_SEG. . . . . . . . . . .  C  ADDR  0065H
 TXD. . . . . . . . . . . . . . . . .  B  ADDR  00B1H  NOT USED
-UPDATE_R1. . . . . . . . . . . . . .  C  ADDR  002AH
-UPDATE_R1_END. . . . . . . . . . . .  C  ADDR  003EH
-UPDATE_R2_END. . . . . . . . . . . .  C  ADDR  003AH
-UPDATE_TRAFFIC . . . . . . . . . . .  C  ADDR  0025H
+UPDATE_R1. . . . . . . . . . . . . .  C  ADDR  0033H
+UPDATE_R1_END. . . . . . . . . . . .  C  ADDR  0047H
+UPDATE_R2_END. . . . . . . . . . . .  C  ADDR  0043H
+UPDATE_TRAFFIC . . . . . . . . . . .  C  ADDR  002EH
 WDTCON . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTPRG . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTRST . . . . . . . . . . . . . . .  D  ADDR  00A6H  NOT USED
