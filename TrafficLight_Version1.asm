@@ -30,6 +30,8 @@ START:	MOV	B,#0FFH
 	ACALL	UPDATE_TRAFFIC	; Green Light and Red Light Signal
 	;ACALL	DELAY		; Delay for Green Light and Red Light
 	ACALL	COUNTDOWN5	; Countdown from 5
+	MOV	A,#00H
+	MOV	P3,A	; off 7 segment display
 
 	ACALL	UPDATE_R1	; ACALL	UPDATE_R1 for next Traffic
 	ACALL	UPDATE_TRAFFIC	; Off Green Light, and be ready for Yellow Signal
@@ -88,9 +90,6 @@ COUNTDOWN5:	MOV	A,#14		; Set initial R5 point to digit 5
 		ACALL	TIMER		; Count down
 		ACALL	TIMER		; Count down
 		ACALL	TIMER		; Count down
-		MOV	A,#00H
-		MOV	P3,A	; off 7 segment display
-
 
 TIMER:	DEC	R5
 	MOV	A,R5		;read input value of R5
